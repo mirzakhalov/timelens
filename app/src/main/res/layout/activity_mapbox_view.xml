@@ -3,13 +3,48 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        mapbox:mapbox_cameraZoom="20"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="100dp"
+        mapbox:mapbox_cameraZoom="20">
 
     </com.mapbox.mapboxsdk.maps.MapView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#FFFFFF"
+        android:foregroundGravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/camera"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:layout_marginLeft="20dp"
+            android:src="@drawable/camera2"
+            app:src="@drawable/camera2"
+            app:srcCompat="@drawable/mapbox_compass_icon" />
+
+        <ImageButton
+            android:id="@+id/switchButton"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="10dp"
+            android:layout_marginRight="20dp"
+            android:src="@drawable/switch_"
+            app:src="@drawable/switch_"
+            app:srcCompat="@mipmap/ic_launcher_round" />
+
+    </LinearLayout>
+
 </FrameLayout>

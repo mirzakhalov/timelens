@@ -17,6 +17,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -46,6 +48,9 @@ public class ARView extends AppCompatActivity {
     private ArFragment arFragment;
     private ModelRenderable andyRenderable;
 
+    private ImageButton switchButton;
+    private ImageButton cameraLaunch;
+
     private Scene.OnUpdateListener updateListener = null;
 
 
@@ -66,6 +71,23 @@ public class ARView extends AppCompatActivity {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
+
+        switchButton = findViewById(R.id.switchButton);
+        switchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ARView.this.startActivity(new Intent(ARView.this, MapboxView.class));
+            }
+        });
+
+        cameraLaunch = findViewById(R.id.camera);
+
+        cameraLaunch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ARView.this.startActivity(new Intent(ARView.this, PhotoView.class));
+            }
+        });
 
         updateListener = frameTime -> {
 
@@ -166,7 +188,7 @@ public class ARView extends AppCompatActivity {
     private void placeObject(Anchor anchor, Uri object) {
         try {
             ModelRenderable.builder()
-                    .setSource(ARView.this, R.raw.andy)
+                    .setSource(ARView.this, R.raw.hourglass)
                     .build()
                     .thenAccept(modelRenderable -> addNodeToScene(anchor, modelRenderable, object))
                     .exceptionally(throwable -> {
@@ -195,7 +217,7 @@ public class ARView extends AppCompatActivity {
 
         transformableNode.setOnTapListener((hitTestResult, motionEvent) -> {
             Toast.makeText(ARView.this, "You can't touch me", Toast.LENGTH_LONG).show();
-            //ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
+            ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
         });
         transformableNode.select();
     }

@@ -1,6 +1,6 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib hour glass.mtl
+mtllib hourglass.mtl
 v -2.297183 -1.076486 1.051894
 v -2.263611 -1.076486 1.306896
 v -2.059558 -1.076486 1.463472

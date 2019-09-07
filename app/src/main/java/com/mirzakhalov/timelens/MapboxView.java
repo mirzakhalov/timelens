@@ -126,8 +126,8 @@ public class MapboxView extends AppCompatActivity implements
 
         // Check if permissions are enabled and if not request
         if(this.lastLongitude != 0 && this.lastLatitude != 0) {
-            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2).toString().replace('.', '_');
-            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2).toString().replace('.', '_');
+            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
+            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
             //private ArrayList imageDetailList;
 
             Context meContext = this;

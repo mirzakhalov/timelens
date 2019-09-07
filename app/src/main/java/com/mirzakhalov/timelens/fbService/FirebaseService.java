@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class FirebaseService {
 
     public FirebaseDatabase DB;
+    public FirebaseStorage stg;
     HashMap<String, ChildEventListener> listenerMap;
     CountDownLatch done;
 
@@ -81,11 +83,12 @@ public class FirebaseService {
 
 
 
-    public Double trimNumByDecPlace(double num, int num_spaces){
+    public String trimNumByDecPlace(double num, int num_spaces){
         double bigNum = num * (num_spaces * 10);
         long newNum = Math.round(bigNum);
-        double returnNum = newNum / (num_spaces * 10);
-        return returnNum;
+        Double returnNum = (double) (newNum / (num_spaces * 10));
+        return returnNum.toString().replace('.', '_').replace('-', 'n');
+
     }
 
 }

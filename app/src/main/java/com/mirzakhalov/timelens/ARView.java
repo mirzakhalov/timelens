@@ -156,8 +156,8 @@ public class ARView extends AppCompatActivity {
                 if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                     //TODO call Anoop's API to get images. If empty, do nothing
                     if(this.lastLongitude != 0 && this.lastLatitude != 0) {
-                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2).toString().replace('.', '_');
-                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2).toString().replace('.', '_');
+                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
+                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
                         //private ArrayList imageDetailList;
                         this.firebaseService.DB.getReference().child(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override

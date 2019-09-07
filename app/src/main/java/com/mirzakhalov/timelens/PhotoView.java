@@ -11,7 +11,4 @@ public class PhotoView extends AppCompatActivity {
         setContentView(R.layout.activity_photo_view);
 
     }
-
-
-
 }

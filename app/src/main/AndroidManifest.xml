@@ -3,12 +3,15 @@
     package="com.mirzakhalov.timelens">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <uses-feature android:name="android.hardware.location.gps" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
 
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -17,27 +20,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <meta-data android:name="com.google.ar.core" android:value="required" />
-        <activity android:name=".PhotoView"></activity>
-        <activity android:name=".GalleryView">
+
+        <meta-data
+            android:name="com.google.ar.core" android:value="required" />
+
+
+        <activity android:name=".PhotoView" />
+        <activity android:name=".GalleryView"></activity>
+        <activity android:name=".MapboxView">
 
         </activity>
-        <activity android:name=".MapboxView">
+        <activity
+            android:name=".ARView"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:screenOrientation="locked"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity android:name=".ARView"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:screenOrientation="locked"
-            android:exported="true">
 
         </activity>
     </application>
-
 
 </manifest>

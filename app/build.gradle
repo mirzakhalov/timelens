@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.ar.sceneform.plugin'
 
 android {
     compileSdkVersion 28
@@ -12,6 +11,12 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -19,10 +24,7 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+
 }
 
 dependencies {
@@ -37,7 +39,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.google.ar:core:1.4.0'
-    implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.4.0'
+    implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.11.0'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.3.0'
 
@@ -45,12 +47,14 @@ dependencies {
 }
 
 
-sceneform.asset('sampledata/ghost/tinker.obj',
-        'default',
-        'sampledata/ghost/tinker.sfa',
-        'src/main/assets/tinker')
+apply plugin: 'com.google.ar.sceneform.plugin'
 
-sceneform.asset('sampledata/pluto/model_pluto_20171119_162330052.obj',
+sceneform.asset('sampledata/models/andy.obj',
         'default',
-        'sampledata/pluto/model_pluto_20171119_162330052.sfa',
-        'src/main/assets/model_pluto_20171119_162330052')
+        'sampledata/models/andy.sfa',
+        'src/main/res/raw/andy')
+
+sceneform.asset('sampledata/pluto/pluto.obj',
+        'default',
+        'sampledata/pluto/pluto.sfa',
+        'src/main/res/raw/pluto')

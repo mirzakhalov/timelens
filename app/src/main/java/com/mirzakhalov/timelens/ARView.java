@@ -84,7 +84,7 @@ public class ARView extends AppCompatActivity {
 //                .addOnUpdateListener(updateListener);
 
         ModelRenderable.builder()
-                .setSource(this, R.raw.andy)
+                .setSource(this, R.raw.pluto)
                 .build()
                 .thenAccept(renderable -> andyRenderable = renderable)
                 .exceptionally(

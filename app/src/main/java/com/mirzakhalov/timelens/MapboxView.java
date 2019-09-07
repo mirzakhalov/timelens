@@ -113,6 +113,8 @@ public class MapboxView extends AppCompatActivity implements
 
             // Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
+            lastLatitude = locationComponent.getLastKnownLocation().getLatitude();
+            lastLongitude = locationComponent.getLastKnownLocation().getLongitude();
 
 
             // Activate with options

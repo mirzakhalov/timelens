@@ -28,13 +28,11 @@
 
 
         <activity android:name=".PhotoView" />
-        <activity android:name=".GalleryView"></activity>
-        <activity android:name=".MapboxView">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <activity android:name=".GalleryView">
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        </activity>
+        <activity android:name=".MapboxView">
+
         </activity>
         <activity android:name=".CameraPreview">
 

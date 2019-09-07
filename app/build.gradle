@@ -58,3 +58,13 @@ sceneform.asset('sampledata/pluto/pluto.obj',
         'default',
         'sampledata/pluto/pluto.sfa',
         'src/main/res/raw/pluto')
+
+sceneform.asset('sampledata/hourglass/hourglass.obj',
+        'default',
+        'sampledata/hourglass/hourglass.sfa',
+        'src/main/res/raw/hourglass')
+
+sceneform.asset('sampledata/hourglass/hourglass.obj',
+        'default',
+        'sampledata/hourglass/hourglass.sfa',
+        'src/main/assets/hourglass')

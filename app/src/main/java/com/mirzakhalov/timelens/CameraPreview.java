@@ -4,48 +4,43 @@ import android.app.Activity;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
+import android.widget.ImageButton;
+
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 
-public class CameraPreview extends Activity implements TextureView.SurfaceTextureListener {
-      private Camera mCamera;
-      private TextureView mTextureView;
+public class CameraPreview extends AppCompatActivity {
 
-      protected void onCreate(Bundle savedInstanceState) {
-          super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.camera_preview);
 
-          mTextureView = new TextureView(this);
-          mTextureView.setSurfaceTextureListener(this);
 
-          setContentView(mTextureView);
-      }
+        Uri image = (Uri) getIntent().getParcelableExtra("image");
 
-      public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-          mCamera = Camera.open();
+        if (null == savedInstanceState) {
 
-          try {
-              mCamera.setPreviewTexture(surface);
-              mCamera.startPreview();
-          } catch (IOException ioe) {
-              // Something bad happened
-          }
-      }
+            BasicFragment fragment = BasicFragment.newInstance();
+            Bundle arguments = new Bundle();
+            arguments.putParcelable( "image" , image);
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, fragment)
+                    .commit();
 
-      public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-          // Ignored, Camera does all the work for us
-      }
 
-      public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-          mCamera.stopPreview();
-          mCamera.release();
-          return true;
-      }
+        }
 
-      public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-          // Invoked every time there's a new Camera preview frame
-      }
-  }
+
+
+    }
+
+}

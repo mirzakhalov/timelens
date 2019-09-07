@@ -1,12 +1,45 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#00FFFFFF"
     tools:context=".ARView">
 
-    <fragment android:name="com.google.ar.sceneform.ux.ArFragment"
+    <fragment
         android:id="@+id/ux_fragment"
+        android:name="com.google.ar.sceneform.ux.ArFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="100dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#FFFFFF"
+        android:foregroundGravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/camera"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:layout_marginLeft="20dp"
+            app:srcCompat="@drawable/camera2"
+            tools:srcCompat="@drawable/camera2" />
+
+        <ImageButton
+            android:id="@+id/switchButton"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="10dp"
+            android:layout_marginRight="20dp"
+            app:srcCompat="@drawable/switch_" />
+
+    </LinearLayout>
 
 </FrameLayout>

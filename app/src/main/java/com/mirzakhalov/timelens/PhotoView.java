@@ -10,5 +10,6 @@ public class PhotoView extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_view);
 
+
     }
 }

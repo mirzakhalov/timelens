@@ -2,11 +2,14 @@ package com.mirzakhalov.timelens;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -45,6 +48,9 @@ public class MapboxView extends AppCompatActivity implements
     private PermissionsManager permissionsManager;
     private MapboxMap mapboxMap;
     private MapView mapView;
+    private ImageButton switchButton;
+    private ImageButton cameraLaunch;
+
 
     private HashMap<String, ArrayList<HashMap<String, String>>> imageDetailList;
 
@@ -67,6 +73,24 @@ public class MapboxView extends AppCompatActivity implements
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
+        switchButton = findViewById(R.id.switchButton);
+        switchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MapboxView.this.startActivity(new Intent(MapboxView.this, ARView.class));
+            }
+        });
+
+        cameraLaunch = findViewById(R.id.camera);
+
+
+        cameraLaunch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MapboxView.this.startActivity(new Intent(MapboxView.this, PhotoView.class));
+
+            }
+        });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 

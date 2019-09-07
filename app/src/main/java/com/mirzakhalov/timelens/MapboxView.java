@@ -21,6 +21,7 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mirzakhalov.timelens.fbService.FirebaseService;
 
 import java.util.List;
 
@@ -39,6 +40,10 @@ public class MapboxView extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FirebaseService fs = new FirebaseService();
+
+        Log.d("INFO", fs.getImageLatLong(0,0).toString());
 
         // Mapbox access token is configured here. This needs to be called either in your application
 // object or in the same activity which contains the mapview.

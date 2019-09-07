@@ -56,6 +56,7 @@ public class ARView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         if (!checkIsSupportedDeviceOrFinish(this)) {
             return;
         }

@@ -1,5 +1,7 @@
 package com.mirzakhalov.timelens;
 
+import android.app.Activity;
+import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +12,9 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
@@ -23,6 +28,8 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mirzakhalov.timelens.fbService.FirebaseService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MapboxView extends AppCompatActivity implements
@@ -33,17 +40,20 @@ public class MapboxView extends AppCompatActivity implements
     private double lastLatitude = 0.0;
     private double lastLongitude = 0.0;
 
+    private FirebaseService firebaseService;
+
     private PermissionsManager permissionsManager;
     private MapboxMap mapboxMap;
     private MapView mapView;
+
+    private HashMap<String, ArrayList<HashMap<String, String>>> imageDetailList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FirebaseService fs = new FirebaseService();
-
-        Log.d("INFO", fs.getImageLatLong(0,0).toString());
+        firebaseService = new FirebaseService();
+        imageDetailList = new HashMap<>();
 
         // Mapbox access token is configured here. This needs to be called either in your application
 // object or in the same activity which contains the mapview.
@@ -113,29 +123,71 @@ public class MapboxView extends AppCompatActivity implements
 
     @SuppressWarnings({"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
+
         // Check if permissions are enabled and if not request
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+        if(this.lastLongitude != 0 && this.lastLatitude != 0) {
+            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2).toString().replace('.', '_');
+            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2).toString().replace('.', '_');
+            //private ArrayList imageDetailList;
 
-            // Get an instance of the component
-            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+            Context meContext = this;
+            PermissionsListener mePL = this;
+            Activity meAct = this;
+
+            String llStr = latTrim + '_' + lonTrim;
+
+            this.firebaseService.DB.getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.d("STATE", "Hi");
 
 
-            // Activate with options
-            locationComponent.activateLocationComponent(
-                    LocationComponentActivationOptions.builder(this, loadedMapStyle).build());
+                    if (dataSnapshot.getValue() != null) {
+                        imageDetailList = new HashMap<>();
+                        ArrayList<HashMap<String, String>> ahmp = new ArrayList<>();
+                        HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
+                        for (HashMap<String, Object> obj : hm.values()) {
+                            HashMap<String, String> imageHM = new HashMap<>();
+                            imageHM.put("url", obj.get("url").toString());
+                            imageHM.put("caption", obj.get("caption").toString());
+                            ahmp.add(imageHM);
 
-            // Enable to make component visible
-            locationComponent.setLocationComponentEnabled(true);
+                        }
+                        imageDetailList.put(llStr, ahmp);
 
-            // Set the component's camera mode
-            locationComponent.setCameraMode(CameraMode.TRACKING);
+                    }
 
-            // Set the component's render mode
-            locationComponent.setRenderMode(RenderMode.COMPASS);
-        } else {
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
+                    if (PermissionsManager.areLocationPermissionsGranted(meContext)) {
+
+                        // Get an instance of the component
+                        LocationComponent locationComponent = mapboxMap.getLocationComponent();
+
+
+                        // Activate with options
+                        locationComponent.activateLocationComponent(
+                                LocationComponentActivationOptions.builder(meContext, loadedMapStyle).build());
+
+                        // Enable to make component visible
+                        locationComponent.setLocationComponentEnabled(true);
+
+                        // Set the component's camera mode
+                        locationComponent.setCameraMode(CameraMode.TRACKING);
+
+                        // Set the component's render mode
+                        locationComponent.setRenderMode(RenderMode.COMPASS);
+                    } else {
+                        permissionsManager = new PermissionsManager(mePL);
+                        permissionsManager.requestLocationPermissions(meAct);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
+
     }
 
     @Override

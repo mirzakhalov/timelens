@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class FirebaseService {
 
-    FirebaseDatabase DB;
+    public FirebaseDatabase DB;
     HashMap<String, ChildEventListener> listenerMap;
     CountDownLatch done;
 
@@ -81,7 +81,7 @@ public class FirebaseService {
 
 
 
-    private Double trimNumByDecPlace(double num, int num_spaces){
+    public Double trimNumByDecPlace(double num, int num_spaces){
         double bigNum = num * (num_spaces * 10);
         long newNum = Math.round(bigNum);
         double returnNum = newNum / (num_spaces * 10);

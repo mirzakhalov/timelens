@@ -1,0 +1,53 @@
+{
+  materials: [
+    {
+      name: 'material0',
+      parameters: [
+        {
+          baseColor: 'texture',
+        },
+        {
+          baseColorTint: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/pluto/model_Pluto_20171119_162330052.obj',
+    name: 'model_Pluto_20171119_162330052',
+    recenter: 'root',
+    scale: 0.012733,
+  },
+  samplers: [
+    {
+      file: 'sampledata/pluto/texture.jpg',
+      name: 'texture',
+      params: {
+        usage_type: 'Data',
+      },
+      pipeline_name: 'texture.jpg',
+    },
+  ],
+  version: '0.54:2',
+}

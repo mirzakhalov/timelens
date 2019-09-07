@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Timelens</string>
+    <string name="mapbox_token">pk.eyJ1IjoibWlyemFraGFsb3YiLCJhIjoiY2phZWM3cmdsMHJkMDMycGRjY2JuamFzNCJ9.Y5AxNBHcNILaEWX65d4NeA</string>
 </resources>

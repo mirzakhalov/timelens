@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.ar.sceneform.plugin'
 
 android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.mirzakhalov.timelens"
-        minSdkVersion 19
+        minSdkVersion 24
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -16,6 +17,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -30,5 +36,21 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.google.ar:core:1.4.0'
+    implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.4.0'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.3.0'
+
 
 }
+
+
+sceneform.asset('sampledata/ghost/tinker.obj',
+        'default',
+        'sampledata/ghost/tinker.sfa',
+        'src/main/assets/tinker')
+
+sceneform.asset('sampledata/pluto/model_pluto_20171119_162330052.obj',
+        'default',
+        'sampledata/pluto/model_pluto_20171119_162330052.sfa',
+        'src/main/assets/model_pluto_20171119_162330052')

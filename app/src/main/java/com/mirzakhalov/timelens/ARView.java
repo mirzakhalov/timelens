@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.location.Location;
@@ -67,53 +68,23 @@ public class ARView extends AppCompatActivity {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
-//        updateListener = frameTime -> {
-//
-//            Frame frame = arFragment.getArSceneView().getArFrame();
-//            if(frame == null) {
-//                return;
-//            }
-//
-//            for(Plane plane : frame.getUpdatedTrackables(Plane.class)) {
-//                Log.d("AR", "Found a plane");
-//                addObjectModel(Uri.parse("model_pluto_20171119_162330052.sfb"));
-//                break;
-//            }
-//        };
-//
-//        arFragment.getArSceneView().getScene()
-//                .addOnUpdateListener(updateListener);
+        updateListener = frameTime -> {
 
-        ModelRenderable.builder()
-                .setSource(this, R.raw.pluto)
-                .build()
-                .thenAccept(renderable -> andyRenderable = renderable)
-                .exceptionally(
-                        throwable -> {
-                            Toast toast =
-                                    Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
-                            return null;
-                        });
+            Frame frame = arFragment.getArSceneView().getArFrame();
+            if(frame == null) {
+                return;
+            }
 
-        arFragment.setOnTapArPlaneListener(
-                (HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
-                    if (andyRenderable == null) {
-                        return;
-                    }
+            for(Plane plane : frame.getUpdatedTrackables(Plane.class)) {
+                Log.d("AR", "Found a plane");
+                addObjectModel(Uri.parse("model_pluto_20171119_162330052.sfb"));
+                break;
+            }
+        };
 
-                    // Create the Anchor.
-                    Anchor anchor = hitResult.createAnchor();
-                    AnchorNode anchorNode = new AnchorNode(anchor);
-                    anchorNode.setParent(arFragment.getArSceneView().getScene());
+        arFragment.getArSceneView().getScene()
+                .addOnUpdateListener(updateListener);
 
-                    // Create the transformable andy and add it to the anchor.
-                    TransformableNode andy = new TransformableNode(arFragment.getTransformationSystem());
-                    andy.setParent(anchorNode);
-                    andy.setRenderable(andyRenderable);
-                    andy.select();
-                });
 
         // call this function every 10 seconds to get the new location
         new Timer().scheduleAtFixedRate(new TimerTask() {
@@ -170,8 +141,11 @@ public class ARView extends AppCompatActivity {
             for(HitResult hit : result) {
                 Trackable trackable = hit.getTrackable();
                 if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
-                    placeObject(hit.createAnchor(), object);
-                    break;
+                    //TODO call Anoop's API to get images. If empty, do nothing
+                    if(true) {
+                        placeObject(hit.createAnchor(), object);
+                        break;
+                    }
                 }
             }
         } else{
@@ -193,7 +167,7 @@ public class ARView extends AppCompatActivity {
     private void placeObject(Anchor anchor, Uri object) {
         try {
             ModelRenderable.builder()
-                    .setSource(ARView.this, object)
+                    .setSource(ARView.this, R.raw.andy)
                     .build()
                     .thenAccept(modelRenderable -> addNodeToScene(anchor, modelRenderable, object))
                     .exceptionally(throwable -> {
@@ -221,7 +195,8 @@ public class ARView extends AppCompatActivity {
         arFragment.getArSceneView().getScene().addChild(anchorNode);
 
         transformableNode.setOnTapListener((hitTestResult, motionEvent) -> {
-            //Perform callback action, like bark
+            Toast.makeText(ARView.this, "You can't touch me", Toast.LENGTH_LONG).show();
+            //ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
         });
         transformableNode.select();
     }

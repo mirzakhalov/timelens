@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -34,7 +35,13 @@ import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+import com.mirzakhalov.timelens.fbService.FirebaseService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,6 +60,10 @@ public class ARView extends AppCompatActivity {
 
     private Scene.OnUpdateListener updateListener = null;
 
+    private FirebaseService firebaseService;
+
+    private ArrayList<HashMap<String, String>> imageDetailList;
+
 
 
 
@@ -61,6 +72,9 @@ public class ARView extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        imageDetailList = new ArrayList<>();
+        firebaseService = new FirebaseService();
+
 
         if (!checkIsSupportedDeviceOrFinish(this)) {
             return;
@@ -163,10 +177,38 @@ public class ARView extends AppCompatActivity {
                 Trackable trackable = hit.getTrackable();
                 if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                     //TODO call Anoop's API to get images. If empty, do nothing
-                    if(true) {
-                        placeObject(hit.createAnchor(), object);
-                        break;
+                    if(this.lastLongitude != 0 && this.lastLatitude != 0) {
+                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2).toString().replace('.', '_');
+                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2).toString().replace('.', '_');
+                        //private ArrayList imageDetailList;
+                        this.firebaseService.DB.getReference().child(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.d("STATE", "Hi");
+
+
+                                if (dataSnapshot.getValue() != null) {
+                                    imageDetailList = new ArrayList<>();
+                                    HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
+                                    for (HashMap<String, Object> obj : hm.values()) {
+                                        HashMap<String, String> imageHM = new HashMap<>();
+                                        imageHM.put("url", obj.get("url").toString());
+                                        imageHM.put("caption", obj.get("caption").toString());
+
+                                        imageDetailList.add(imageHM);
+                                    }
+                                    placeObject(hit.createAnchor(), object);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
+
+
                 }
             }
         } else{

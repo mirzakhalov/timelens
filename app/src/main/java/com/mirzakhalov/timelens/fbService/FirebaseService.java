@@ -69,8 +69,8 @@ public class FirebaseService {
     }
 
     public void removeListenerLatLong(double lat, double lon) {
-        String latTrim = trimNumByDecPlace(lat, 2).toString();
-        String lonTrim = trimNumByDecPlace(lon, 2).toString();
+        String latTrim = trimNumByDecPlace(lat, 2);
+        String lonTrim = trimNumByDecPlace(lon, 2);
 
         String key = latTrim + '_' + lonTrim;
 
@@ -84,11 +84,10 @@ public class FirebaseService {
 
 
     public String trimNumByDecPlace(double num, int num_spaces){
-        double bigNum = num * (num_spaces * 10);
+        double bigNum = num * (Math.pow(10, num_spaces));
         long newNum = Math.round(bigNum);
-        Double returnNum = (double) (newNum / (num_spaces * 10));
-        return returnNum.toString().replace('.', '_').replace('-', 'n');
-
+        Double returnNum = (double) newNum / (Math.pow(10, num_spaces));
+        return returnNum.toString().replace('-', 'n').replace('.', '_');
     }
 
 }

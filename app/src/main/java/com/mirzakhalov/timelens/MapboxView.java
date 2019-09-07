@@ -40,8 +40,8 @@ public class MapboxView extends AppCompatActivity implements
 
 
     private FusedLocationProviderClient fusedLocationClient;
-    private double lastLatitude = 0.0;
-    private double lastLongitude = 0.0;
+    private double lastLatitude = 39.9526349;
+    private double lastLongitude = -75.1928578;
 
     private FirebaseService firebaseService;
 
@@ -52,22 +52,22 @@ public class MapboxView extends AppCompatActivity implements
     private ImageButton cameraLaunch;
 
 
-    private HashMap<String, ArrayList<HashMap<String, String>>> imageDetailList;
+    private ArrayList<HashMap<String, String>> imageDetailList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         firebaseService = new FirebaseService();
-        imageDetailList = new HashMap<>();
+        imageDetailList = new ArrayList<>();
 
         // Mapbox access token is configured here. This needs to be called either in your application
-// object or in the same activity which contains the mapview.
+        // object or in the same activity which contains the mapview.
         Mapbox.getInstance(this, getString(R.string.mapbox_token));
         setContentView(R.layout.activity_mapbox_view);
 
 
-// This contains the MapView in XML and needs to be called after the access token is configured.
+        // This contains the MapView in XML and needs to be called after the access token is configured.
 
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -93,6 +93,7 @@ public class MapboxView extends AppCompatActivity implements
         });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        getLocation();
 
     }
 
@@ -109,7 +110,7 @@ public class MapboxView extends AppCompatActivity implements
                             Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                // do something
+                                getData();
                             }
                         }
                     });
@@ -144,21 +145,17 @@ public class MapboxView extends AppCompatActivity implements
 
     }
 
-
-    @SuppressWarnings({"MissingPermission"})
-    private void enableLocationComponent(@NonNull Style loadedMapStyle) {
+    public void getData(){
 
         // Check if permissions are enabled and if not request
-        if(this.lastLongitude != 0 && this.lastLatitude != 0) {
+        if(this.lastLongitude != 0.0 && this.lastLatitude != 0.0) {
             String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
             String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
             //private ArrayList imageDetailList;
 
-            Context meContext = this;
-            PermissionsListener mePL = this;
-            Activity meAct = this;
 
             String llStr = latTrim + '_' + lonTrim;
+            Log.d("Reference", llStr);
 
             this.firebaseService.DB.getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -167,49 +164,67 @@ public class MapboxView extends AppCompatActivity implements
 
 
                     if (dataSnapshot.getValue() != null) {
-                        imageDetailList = new HashMap<>();
-                        ArrayList<HashMap<String, String>> ahmp = new ArrayList<>();
                         HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
+                        Log.d("hm", hm.toString());
                         for (HashMap<String, Object> obj : hm.values()) {
                             HashMap<String, String> imageHM = new HashMap<>();
                             imageHM.put("url", obj.get("url").toString());
                             imageHM.put("caption", obj.get("caption").toString());
-                            ahmp.add(imageHM);
+                            imageDetailList.add(imageHM);
+                            Log.d("Data", "Adding data");
 
                         }
-                        imageDetailList.put(llStr, ahmp);
-
                     }
 
-                    if (PermissionsManager.areLocationPermissionsGranted(meContext)) {
-
-                        // Get an instance of the component
-                        LocationComponent locationComponent = mapboxMap.getLocationComponent();
-
-
-                        // Activate with options
-                        locationComponent.activateLocationComponent(
-                                LocationComponentActivationOptions.builder(meContext, loadedMapStyle).build());
-
-                        // Enable to make component visible
-                        locationComponent.setLocationComponentEnabled(true);
-
-                        // Set the component's camera mode
-                        locationComponent.setCameraMode(CameraMode.TRACKING);
-
-                        // Set the component's render mode
-                        locationComponent.setRenderMode(RenderMode.COMPASS);
-                    } else {
-                        permissionsManager = new PermissionsManager(mePL);
-                        permissionsManager.requestLocationPermissions(meAct);
-                    }
+                    Log.d("Data", imageDetailList.toString());
                 }
+
+
+
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
 
                 }
             });
+
+
+        }
+    }
+
+
+    @SuppressWarnings({"MissingPermission"})
+    private void enableLocationComponent(@NonNull Style loadedMapStyle) {
+
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            // Get an instance of the component
+            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+
+
+
+            // Activate with options
+            locationComponent.activateLocationComponent(
+                    LocationComponentActivationOptions.builder(this, loadedMapStyle).build());
+
+            // Enable to make component visible
+            locationComponent.setLocationComponentEnabled(true);
+
+            // Set the component's camera mode
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+
+            // Set the component's render mode
+            locationComponent.setRenderMode(RenderMode.COMPASS);
+
+            if(locationComponent.isLocationComponentActivated() && locationComponent.isLocationComponentEnabled() && locationComponent.getLastKnownLocation() != null){
+                Log.d("Location", locationComponent.getLastKnownLocation().toString());
+                lastLongitude = locationComponent.getLastKnownLocation().getLongitude();
+                lastLatitude = locationComponent.getLastKnownLocation().getLatitude();
+            }
+
+
+        } else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
         }
 
     }

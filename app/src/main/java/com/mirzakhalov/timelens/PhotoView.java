@@ -1,6 +1,9 @@
 package com.mirzakhalov.timelens;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -13,10 +16,12 @@ import android.location.Location;
 import android.os.Build;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,6 +42,7 @@ import com.google.firebase.ml.vision.cloud.landmark.FirebaseVisionCloudLandmark;
 import com.google.firebase.ml.vision.cloud.landmark.FirebaseVisionCloudLandmarkDetector;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionLatLng;
+import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -75,11 +81,15 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     private double lastLatitude = 0.0;
     private double lastLongitude = 0.0;
 
+    private double landMLatitude = 0.0;
+    private double landMLongitude = 0.0;
+    private boolean useLM = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_view);
-        imageFromPath(this.getApplicationContext());
+
 
         firebaseService = new FirebaseService();
 
@@ -91,6 +101,8 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
         takePicture.setOnClickListener(this);
         proceedButton.setOnClickListener(this);
+
+
 
         try {
             //use standard intent to capture an image
@@ -114,10 +126,10 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     }
 
 
-    private void imageFromPath(Context context) {
+    private void imageFromPath() {
         // [START image_from_path]
 
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.raw.monument1);
+        Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
         FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
 
         // [END image_from_path]
@@ -149,6 +161,8 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                         // Task completed successfully
                         // [START_EXCLUDE]
                         // [START get_landmarks_cloud]
+                        FirebaseVisionCloudLandmark confLM = null;
+
                         for (FirebaseVisionCloudLandmark landmark: firebaseVisionCloudLandmarks) {
 
                             Rect bounds = landmark.getBoundingBox();
@@ -157,15 +171,51 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                             String entityId = landmark.getEntityId();
                             float confidence = landmark.getConfidence();
 
+                            Log.d("info", "onSuccess: " + landmark.toString());
+
+                            if(confidence > 0.65 && (confLM == null || (confLM.getConfidence() < confidence))) {
+                                confLM = landmark;
+                            }
+
                             // Multiple locations are possible, e.g., the location of the depicted
                             // landmark and the location the picture was taken.
-                            for (FirebaseVisionLatLng loc: landmark.getLocations()) {
-                                Double latitude = loc.getLatitude();
-                                Double longitude = loc.getLongitude();
-                                Log.d("OUTPUT", "onSuccess: lat: " + latitude.toString());
-                                Log.d("OUTPUT", "onSuccess: long: " + longitude.toString());
-                            }
+
                         }
+
+                        final FirebaseVisionCloudLandmark finalLM = confLM;
+
+                        if(finalLM != null) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(PhotoView.this);
+                            builder.setMessage("You seem to be at " + confLM.getLandmark() + ". Do you want to use this location?")
+                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            // FIRE ZE MISSILES!
+                                            useLM = true;
+                                            for (FirebaseVisionLatLng loc: finalLM.getLocations()) {
+                                                lastLatitude = loc.getLatitude();
+                                                lastLongitude = loc.getLongitude();
+                                                Log.d("OUTPUT", "onSuccess: lat: " + ((Double) lastLatitude).toString());
+                                                Log.d("OUTPUT", "onSuccess: long: " + ((Double) lastLongitude).toString());
+                                            }
+                                            uploadAvatar(thePic);
+                                        }
+                                    })
+                                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            // User cancelled the dialog
+                                            uploadAvatar(thePic);
+                                        }
+                                    });
+
+                            Dialog dialog = builder.create();
+                            dialog.show();
+
+
+                        } else {
+                            uploadAvatar(thePic);
+                        }
+
+
                         // [END get_landmarks_cloud]
                         // [END_EXCLUDE]
                     }
@@ -175,6 +225,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                     public void onFailure(@NonNull Exception e) {
                         // Task failed with an exception
                         // ...
+                        Log.d("info", "Failure");
                     }
                 });
         // [END run_detector_cloud]
@@ -196,8 +247,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
         else if(v.getId() == R.id.upload) {
 
             if(thePic != null){
-                uploadAvatar(thePic);
-
+                uploadAvatar();
             }
         }
 
@@ -321,31 +371,45 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
 
     public void uploadImageMetadata(Uri uri){
-        if(lastLatitude != 0.0 && lastLongitude != 0.0){
-            String latTrim = this.firebaseService.trimNumByDecPlace(lastLatitude, 2);
-            String lngTrim = this.firebaseService.trimNumByDecPlace(lastLongitude, 2);
-            String latKey = latTrim + "_" + lngTrim;
+        double targetLat;
+        double targetLong;
+        boolean currLoc = !useLM && lastLatitude != 0.0 && lastLongitude != 0.0;
+        boolean lmLoc = useLM && landMLatitude != 0.0 && landMLongitude != 0.0;
 
-            Log.d("Test", uri.toString());
-            HashMap<String, Double> location = new HashMap<>();
+        if(!currLoc && !lmLoc){
+            return;
+        } else if(currLoc){
+            targetLat = lastLatitude;
+            targetLong = lastLongitude;
 
-            location.put("latitude", lastLatitude);
-            location.put("longitude", lastLongitude);
-
-            Double timestamp = (double) new Date().getTime();
-            String captionStr = caption.getText().toString();
-            String url = uri.toString();
-
-            HashMap<String, Object> inpObj = new HashMap<>();
-            HashMap<String, Object> inpObjStuff = new HashMap<>();
-            inpObjStuff.put("location", location);
-            inpObjStuff.put("caption", captionStr);
-            inpObjStuff.put("url", url);
-            inpObjStuff.put("timestamp", timestamp);
-            inpObj.put(UUID.randomUUID().toString(), inpObjStuff);
-
-            this.firebaseService.DB.getReference().child(latKey).updateChildren(inpObj);
+        } else {
+            targetLat = landMLatitude;
+            targetLong = landMLongitude;
         }
+
+        String latTrim = this.firebaseService.trimNumByDecPlace(targetLat, 2);
+        String lngTrim = this.firebaseService.trimNumByDecPlace(targetLong, 2);
+        String latKey = latTrim + "_" + lngTrim;
+
+        Log.d("Test", uri.toString());
+        HashMap<String, Double> location = new HashMap<>();
+
+        location.put("latitude", targetLat);
+        location.put("longitude", targetLong);
+
+        Double timestamp = (double) new Date().getTime();
+        String captionStr = caption.getText().toString();
+        String url = uri.toString();
+
+        HashMap<String, Object> inpObj = new HashMap<>();
+        HashMap<String, Object> inpObjStuff = new HashMap<>();
+        inpObjStuff.put("location", location);
+        inpObjStuff.put("caption", captionStr);
+        inpObjStuff.put("url", url);
+        inpObjStuff.put("timestamp", timestamp);
+        inpObj.put(UUID.randomUUID().toString(), inpObjStuff);
+
+        this.firebaseService.DB.getReference().child(latKey).updateChildren(inpObj);
     }
 }
 

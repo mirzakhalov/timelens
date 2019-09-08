@@ -10,7 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bd433a9a-5551-4d23-846d-f332789e9a0e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/PhotoView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/PhotoView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/layout/activity_photo_view.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/res/layout/activity_photo_view.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -45,11 +47,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/PhotoView.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="490">
-              <caret line="55" column="8" selection-start-line="55" selection-start-column="8" selection-end-line="55" selection-end-column="8" />
+            <state relative-caret-position="675">
+              <caret line="45" column="80" selection-start-line="45" selection-start-column="80" selection-end-line="45" selection-end-column="80" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -75,15 +77,15 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="218" column="64" lean-forward="true" selection-start-line="218" selection-start-column="64" selection-end-line="218" selection-end-column="64" />
+            <state relative-caret-position="2925">
+              <caret line="195" column="21" selection-start-line="195" selection-start-column="21" selection-end-line="195" selection-end-column="21" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#2410#2442#0" expanded="true" />
-                <element signature="e#7287#7327#0" expanded="true" />
+                <element signature="e#2510#2542#0" expanded="true" />
+                <element signature="e#8410#8450#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -154,8 +156,8 @@
         <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/CameraPreview.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/ARView.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/fbService/FirebaseService.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/PhotoView.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java" />
       </list>
     </option>
   </component>
@@ -868,18 +870,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="218" column="64" lean-forward="true" selection-start-line="218" selection-start-column="64" selection-end-line="218" selection-end-column="64" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#2410#2442#0" expanded="true" />
-            <element signature="e#7287#7327#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/OnSwipeTouchListener.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
@@ -889,10 +879,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/PhotoView.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="490">
-          <caret line="55" column="8" selection-start-line="55" selection-start-column="8" selection-end-line="55" selection-end-column="8" />
+        <state relative-caret-position="675">
+          <caret line="45" column="80" selection-start-line="45" selection-start-column="80" selection-end-line="45" selection-end-column="80" />
           <folding>
             <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/mirzakhalov/timelens/MapboxView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2925">
+          <caret line="195" column="21" selection-start-line="195" selection-start-column="21" selection-end-line="195" selection-end-column="21" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2510#2542#0" expanded="true" />
+            <element signature="e#8410#8450#0" expanded="true" />
           </folding>
         </state>
       </provider>

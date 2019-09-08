@@ -21,6 +21,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
@@ -95,6 +97,8 @@ public class MapboxView extends AppCompatActivity implements
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLocation();
 
+
+
     }
 
 
@@ -111,6 +115,10 @@ public class MapboxView extends AppCompatActivity implements
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 getData();
+                                if(mapboxMap != null){
+
+
+                                }
                             }
                         }
                     });
@@ -186,6 +194,24 @@ public class MapboxView extends AppCompatActivity implements
 
                         Log.d("Data", imageDetailList.toString());
                     }
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.9526349, -75.1928578))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.952700, -75.192900))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.952824, -75.192823))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.9524787, -75.1904646))
+                            .title("Eiffel Tower"));
+
+                    Log.d("Data", imageDetailList.toString());
                 }
 
 
@@ -208,6 +234,8 @@ public class MapboxView extends AppCompatActivity implements
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
             // Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
+
+
 
 
 

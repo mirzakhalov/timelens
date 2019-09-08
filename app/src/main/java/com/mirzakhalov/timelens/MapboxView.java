@@ -1,6 +1,8 @@
 package com.mirzakhalov.timelens;
 
 import android.content.Intent;
+import android.app.Activity;
+import android.content.Context;
 import android.location.Location;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,9 +15,14 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
@@ -24,7 +31,10 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mirzakhalov.timelens.fbService.FirebaseService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MapboxView extends AppCompatActivity implements
@@ -32,8 +42,10 @@ public class MapboxView extends AppCompatActivity implements
 
 
     private FusedLocationProviderClient fusedLocationClient;
-    private double lastLatitude = 0.0;
-    private double lastLongitude = 0.0;
+    private double lastLatitude = 39.9526349;
+    private double lastLongitude = -75.1928578;
+
+    private FirebaseService firebaseService;
 
     private PermissionsManager permissionsManager;
     private MapboxMap mapboxMap;
@@ -42,17 +54,22 @@ public class MapboxView extends AppCompatActivity implements
     private ImageButton cameraLaunch;
 
 
+    private HashMap<String, ArrayList<HashMap<String, String>>> imageDetailList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        firebaseService = new FirebaseService();
+        imageDetailList = new HashMap<>();
+
         // Mapbox access token is configured here. This needs to be called either in your application
-// object or in the same activity which contains the mapview.
+        // object or in the same activity which contains the mapview.
         Mapbox.getInstance(this, getString(R.string.mapbox_token));
         setContentView(R.layout.activity_mapbox_view);
 
 
-// This contains the MapView in XML and needs to be called after the access token is configured.
+        // This contains the MapView in XML and needs to be called after the access token is configured.
 
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -78,6 +95,9 @@ public class MapboxView extends AppCompatActivity implements
         });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        getLocation();
+
+
 
     }
 
@@ -94,7 +114,11 @@ public class MapboxView extends AppCompatActivity implements
                             Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                // do something
+                                getData();
+                                if(mapboxMap != null){
+
+
+                                }
                             }
                         }
                     });
@@ -129,16 +153,84 @@ public class MapboxView extends AppCompatActivity implements
 
     }
 
+    public void getData(){
+
+        // Check if permissions are enabled and if not request
+        if(this.lastLongitude != 0.0 && this.lastLatitude != 0.0) {
+            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
+            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
+            //private ArrayList imageDetailList;
+
+
+            String llStr = latTrim + '_' + lonTrim;
+            Log.d("Reference", llStr);
+
+            this.firebaseService.DB.getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.d("STATE", "Hi");
+
+
+                    if (dataSnapshot.getValue() != null) {
+                        ArrayList<HashMap<String, String>> ahmp = new ArrayList<>();
+                        HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
+                        Log.d("hm", hm.toString());
+                        for (HashMap<String, Object> obj : hm.values()) {
+                            HashMap<String, String> imageHM = new HashMap<>();
+                            imageHM.put("url", obj.get("url").toString());
+                            imageHM.put("caption", obj.get("caption").toString());
+                            ahmp.add(imageHM);
+                            Log.d("Data", "Adding data");
+
+                        }
+                        imageDetailList.put(llStr, ahmp);
+
+
+                    }
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.9526349, -75.1928578))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.952700, -75.192900))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.952824, -75.192823))
+                            .title("Eiffel Tower"));
+
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(39.9524787, -75.1904646))
+                            .title("Eiffel Tower"));
+
+                    Log.d("Data", imageDetailList.toString());
+                }
+
+
+
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+
+        }
+    }
+
 
     @SuppressWarnings({"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
-        // Check if permissions are enabled and if not request
+
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
 
             // Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
-           // lastLatitude = locationComponent.getLastKnownLocation().getLatitude();
-           // lastLongitude = locationComponent.getLastKnownLocation().getLongitude();
+
+
+
 
 
             // Activate with options
@@ -153,10 +245,19 @@ public class MapboxView extends AppCompatActivity implements
 
             // Set the component's render mode
             locationComponent.setRenderMode(RenderMode.COMPASS);
+
+            if(locationComponent.isLocationComponentActivated() && locationComponent.isLocationComponentEnabled() && locationComponent.getLastKnownLocation() != null){
+                Log.d("Location", locationComponent.getLastKnownLocation().toString());
+                lastLongitude = locationComponent.getLastKnownLocation().getLongitude();
+                lastLatitude = locationComponent.getLastKnownLocation().getLatitude();
+            }
+
+
         } else {
             permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(this);
         }
+
     }
 
     @Override

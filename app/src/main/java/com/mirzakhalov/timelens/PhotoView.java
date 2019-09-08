@@ -1,19 +1,20 @@
 package com.mirzakhalov.timelens;
 
+import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-
-
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -28,14 +29,23 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.cloud.FirebaseVisionCloudDetectorOptions;
+import com.google.firebase.ml.vision.cloud.landmark.FirebaseVisionCloudLandmark;
+import com.google.firebase.ml.vision.cloud.landmark.FirebaseVisionCloudLandmarkDetector;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionLatLng;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.mirzakhalov.timelens.fbService.FirebaseService;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 
 import java.util.UUID;
@@ -51,6 +61,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
     Bitmap thePic = null;
     Uri picUri = null;
+    FirebaseService firebaseService;
 
     private static final int WRITE_PERMISSION = 786;
 
@@ -63,7 +74,9 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_view);
+        imageFromPath(this.getApplicationContext());
 
+        firebaseService = new FirebaseService();
 
         // layout elements
         image = (ImageView) findViewById(R.id.image);
@@ -92,6 +105,74 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLocation();
+
+    }
+
+
+    private void imageFromPath(Context context) {
+        // [START image_from_path]
+
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.raw.monument1);
+        FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
+
+        // [END image_from_path]
+
+        recognizeLandmarksCloud(image);
+    }
+
+    private void recognizeLandmarksCloud(FirebaseVisionImage image) {
+        // [START set_detector_options_cloud]
+        FirebaseVisionCloudDetectorOptions options = new FirebaseVisionCloudDetectorOptions.Builder()
+                .setModelType(FirebaseVisionCloudDetectorOptions.LATEST_MODEL)
+                .setMaxResults(30)
+                .build();
+        // [END set_detector_options_cloud]
+
+        // [START get_detector_cloud]
+        FirebaseVisionCloudLandmarkDetector detector = FirebaseVision.getInstance()
+                .getVisionCloudLandmarkDetector();
+        // Or, to change the default settings:
+        // FirebaseVisionCloudLandmarkDetector detector = FirebaseVision.getInstance()
+        //         .getVisionCloudLandmarkDetector(options);
+        // [END get_detector_cloud]
+
+        // [START run_detector_cloud]
+        Task<List<FirebaseVisionCloudLandmark>> result = detector.detectInImage(image)
+                .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionCloudLandmark>>() {
+                    @Override
+                    public void onSuccess(List<FirebaseVisionCloudLandmark> firebaseVisionCloudLandmarks) {
+                        // Task completed successfully
+                        // [START_EXCLUDE]
+                        // [START get_landmarks_cloud]
+                        for (FirebaseVisionCloudLandmark landmark: firebaseVisionCloudLandmarks) {
+
+                            Rect bounds = landmark.getBoundingBox();
+                            String landmarkName = landmark.getLandmark();
+                            Log.d("LANDMARK", "onSuccess: " + landmarkName);
+                            String entityId = landmark.getEntityId();
+                            float confidence = landmark.getConfidence();
+
+                            // Multiple locations are possible, e.g., the location of the depicted
+                            // landmark and the location the picture was taken.
+                            for (FirebaseVisionLatLng loc: landmark.getLocations()) {
+                                Double latitude = loc.getLatitude();
+                                Double longitude = loc.getLongitude();
+                                Log.d("OUTPUT", "onSuccess: lat: " + latitude.toString());
+                                Log.d("OUTPUT", "onSuccess: long: " + longitude.toString());
+                            }
+                        }
+                        // [END get_landmarks_cloud]
+                        // [END_EXCLUDE]
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Task failed with an exception
+                        // ...
+                    }
+                });
+        // [END run_detector_cloud]
     }
 
     public void onClick(View v) {
@@ -201,7 +282,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
         //TODO update this reference
-        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child("");
+        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(UUID.randomUUID().toString());
 
         UploadTask uploadTask = imageRef.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -220,8 +301,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                 imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-
-
+                        uploadImageMetadata(uri);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -235,15 +315,13 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
 
 
-    public void uploadImageMetadata(Uri uri, String caption){
-
+    public void uploadImageMetadata(Uri uri){
         if(lastLatitude != 0.0 && lastLongitude != 0.0){
-
-
-
+            String latTrim = this.firebaseService.trimNumByDecPlace(lastLatitude, 2);
+            String lngTrim = this.firebaseService.trimNumByDecPlace(lastLongitude, 2);
+            String latKey = latTrim + "_" + lngTrim;
+            this.firebaseService.DB.getReference().child(latKey);
         }
-
     }
-
 }
 

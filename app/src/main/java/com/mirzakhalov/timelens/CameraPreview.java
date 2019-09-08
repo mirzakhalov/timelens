@@ -1,20 +1,8 @@
 package com.mirzakhalov.timelens;
 
-import android.app.Activity;
-
-import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.TextureView;
-import android.widget.ImageButton;
-
-import com.squareup.picasso.Picasso;
-
-import java.io.IOException;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class CameraPreview extends AppCompatActivity {
 

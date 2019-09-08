@@ -1,6 +1,6 @@
 package com.mirzakhalov.timelens.fbService;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.ChildEventListener;

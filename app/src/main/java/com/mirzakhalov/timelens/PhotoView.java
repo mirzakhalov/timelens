@@ -4,13 +4,10 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 
-import android.app.Activity;
-import android.app.AlertDialog;
+
 import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -239,7 +236,6 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
 
     public void uploadImageMetadata(Uri uri, String caption){
-
 
         if(lastLatitude != 0.0 && lastLongitude != 0.0){
 

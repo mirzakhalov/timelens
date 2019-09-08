@@ -1,8 +1,8 @@
 package com.mirzakhalov.timelens;
 
 import android.net.Uri;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 public class GalleryView extends AppCompatActivity {

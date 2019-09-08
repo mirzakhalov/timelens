@@ -52,6 +52,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "573365404789-enjcu6end6ieu70ohij11nqd0d5trn5a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mirzakhalov.timelens",
+            "certificate_hash": "719cfc676a192ae9b72b0cc768bd7c4bf2f8f7a0"
+          }
+        },
+        {
+          "client_id": "573365404789-6etrfih9c8etrthjqofagogktardasbu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mirzakhalov.timelens",
+            "certificate_hash": "236286bef1fd189c5b379e1cb6f8595db7a549e7"
+          }
+        },
+        {
           "client_id": "573365404789-7ml4th8j4s6ggrijr97osf0en4p2pve2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

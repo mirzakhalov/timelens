@@ -192,10 +192,21 @@ public class ARView extends AppCompatActivity {
                                     HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
                                     for (HashMap<String, Object> obj : hm.values()) {
                                         HashMap<String, String> imageHM = new HashMap<>();
-                                        imageHM.put("url", obj.get("url").toString());
-                                        imageHM.put("caption", obj.get("caption").toString());
+                                        if (obj.get("url") != null) {
+                                            imageHM.put("url", obj.get("url").toString());
+                                        }
+                                        if (obj.get("caption") != null) {
+                                            imageHM.put("caption", obj.get("url").toString());
+                                        }
+                                        if (obj.get("location") != null) {
+                                            HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
+                                            imageHM.put("latitude", lcHM.get("latitude").toString());
+                                            imageHM.put("longitude", lcHM.get("longitude").toString());
+                                        }
 
                                         imageDetailList.add(imageHM);
+                                        Log.d("Data", "Adding data");
+
                                     }
                                     placeObject(hit.createAnchor(), object);
                                 }

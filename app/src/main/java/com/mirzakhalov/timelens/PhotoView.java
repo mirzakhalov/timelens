@@ -16,9 +16,11 @@ import android.location.Location;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -39,7 +41,10 @@ import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 
@@ -68,6 +73,9 @@ public class PhotoView extends Activity implements View.OnClickListener {
     private double lastLatitude = 0.0;
     private double lastLongitude = 0.0;
 
+    String currentPhotoPath;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,21 +90,35 @@ public class PhotoView extends Activity implements View.OnClickListener {
         takePicture.setOnClickListener(this);
         proceedButton.setOnClickListener(this);
 
-        try {
-            //use standard intent to capture an image
-            Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            //we will handle the returned data in onActivityResult
-            startActivityForResult(captureIntent, CAMERA_CAPTURE);
-        } catch (ActivityNotFoundException anfe) {
-            //display an error message
-            Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
-            toast.show();
+        if (savedInstanceState == null)
+        {
+            try {
+                //use standard intent to capture an image
+                Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException ex) {
+                    // Error occurred while creating the File
+
+                }
+                // Continue only if the File was successfully created
+                if (photoFile != null) {
+                    Uri photoURI = FileProvider.getUriForFile(this,
+                            "com.example.android.fileprovider",
+                            photoFile);
+                    captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(captureIntent, CAMERA_CAPTURE);
+                }
+            } catch (ActivityNotFoundException anfe) {
+                //display an error message
+                Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
+                toast.show();
+            }
         }
 
-        // request permission in the runtime
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_PERMISSION);
-        }
+
+
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLocation();
@@ -107,10 +129,28 @@ public class PhotoView extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         if( v.getId() == R.id.retake){
             try {
+
                 //use standard intent to capture an image
                 Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                //we will handle the returned data in onActivityResult
-                startActivityForResult(captureIntent, CAMERA_CAPTURE);
+
+                if (captureIntent.resolveActivity(getPackageManager()) != null) {
+
+                    File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        // Error occurred while creating the File
+
+                    }
+                    // Continue only if the File was successfully created
+                    if (photoFile != null) {
+                        Uri photoURI = FileProvider.getUriForFile(this,
+                                "com.example.android.fileprovider",
+                                photoFile);
+                        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        startActivityForResult(captureIntent, CAMERA_CAPTURE);
+                    }
+                }
             } catch (ActivityNotFoundException anfe) {
                 //display an error message
                 Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
@@ -128,6 +168,8 @@ public class PhotoView extends Activity implements View.OnClickListener {
     }
 
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -135,52 +177,45 @@ public class PhotoView extends Activity implements View.OnClickListener {
             //user is returning from capturing an image using the camera
             if (requestCode == CAMERA_CAPTURE) {
                 //get the Uri for the captured image
-                if(data != null) {
+                if (data != null) {
                     picUri = data.getData();
-                    Bundle extras = data.getExtras();
-                    //get the cropped bitmap
-                    thePic = extras.getParcelable("data");
-                    if(thePic != null){
-                        // resizing the picture to 256 by 256 to save space
-                        //thePic = RoundedImageView.getCroppedBitmap(thePic, 256);
-                        //uploadAvatar(thePic);
-                        image.setImageBitmap(thePic);
-                    }
-                    else{
-                        //TODO handle
-                    }
-
+                    image.setImageURI(picUri);
+                    Toast.makeText(PhotoView.this, "Data is not null", Toast.LENGTH_LONG).show();
                 }
+                if (picUri == null && currentPhotoPath != null) {
+                    picUri = Uri.fromFile(new File(currentPhotoPath));
+
+                    image.setImageURI(picUri);
+                    Toast.makeText(PhotoView.this, "Creating URI from file", Toast.LENGTH_LONG).show();
+                }
+                try {
+                    thePic = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
+                } catch (Exception e){
+                    e.fillInStackTrace();
+                }
+                File file = new File(currentPhotoPath);
+                if (!file.exists()) {
+                    file.mkdir();
+                }
+
+
 
             }
 
         }
     }
 
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    @Override
+    protected void onSaveInstanceState(Bundle outState )
+    {
+        super.onSaveInstanceState(outState);
 
-        switch (requestCode) {
-            case 786: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+    }
 
-
-                }
-                else{
-
-                    //  String errorMessage = "Are you sure you don't want to choose a picture for your avatar?";
-                    Toast toast = Toast.makeText(PhotoView.this, "Permission to use camera needed", Toast.LENGTH_SHORT);
-                    toast.show();
-                    // Permission denied - Show a message to inform the user that this app only works
-                    // with these permissions granted
-
-                }
-                return;
-            }
-
-        }
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     private void getLocation() {
@@ -211,7 +246,7 @@ public class PhotoView extends Activity implements View.OnClickListener {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
         //TODO update this reference
-        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child("");
+        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child("Jim/");
 
         UploadTask uploadTask = imageRef.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -241,6 +276,23 @@ public class PhotoView extends Activity implements View.OnClickListener {
                 });
             }
         });
+    }
+
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
 

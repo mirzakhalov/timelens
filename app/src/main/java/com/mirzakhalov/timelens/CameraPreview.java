@@ -12,13 +12,13 @@ public class CameraPreview extends AppCompatActivity {
         setContentView(R.layout.camera_preview);
 
 
-        Uri image = (Uri) getIntent().getParcelableExtra("image");
+        String image = getIntent().getStringExtra("image");
 
         if (null == savedInstanceState) {
 
             BasicFragment fragment = BasicFragment.newInstance();
             Bundle arguments = new Bundle();
-            arguments.putParcelable( "image" , image);
+            arguments.putString( "image" , image);
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.container, fragment)

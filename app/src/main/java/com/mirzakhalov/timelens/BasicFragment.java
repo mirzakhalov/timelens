@@ -415,9 +415,10 @@ public class BasicFragment extends Fragment
                              Bundle savedInstanceState) {
 
         Bundle arguments = getArguments();
-        image = arguments.getParcelable("image");
+        String image_string = arguments.getString("image");
+        image = Uri.parse(image_string);
 
-        Log.d("Image", image.toString());
+        Log.d("Image", image_string);
 
         return inflater.inflate(R.layout.basic_fragment, container, false);
     }

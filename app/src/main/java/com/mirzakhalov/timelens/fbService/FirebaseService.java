@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 public class FirebaseService {
 
     public FirebaseDatabase DB;
-    public FirebaseStorage stg;
     HashMap<String, ChildEventListener> listenerMap;
     CountDownLatch done;
 

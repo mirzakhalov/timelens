@@ -43,6 +43,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mirzakhalov.timelens.fbService.FirebaseService;
+import com.mirzakhalov.timelens.fbService.ImageLoc;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
@@ -50,10 +51,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 
 import java.util.UUID;
+
+import static java.util.UUID.randomUUID;
 
 public class PhotoView extends AppCompatActivity implements View.OnClickListener {
     Button takePicture;
@@ -317,7 +322,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
         //TODO update this reference
-        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(UUID.randomUUID().toString());
+        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(randomUUID().toString());
 
         UploadTask uploadTask = imageRef.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -372,7 +377,26 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
             String latTrim = this.firebaseService.trimNumByDecPlace(lastLatitude, 2);
             String lngTrim = this.firebaseService.trimNumByDecPlace(lastLongitude, 2);
             String latKey = latTrim + "_" + lngTrim;
-            this.firebaseService.DB.getReference().child(latKey);
+
+            Log.d("Test", uri.toString());
+            HashMap<String, Double> location = new HashMap<>();
+
+            location.put("latitude", lastLatitude);
+            location.put("longitude", lastLongitude);
+
+            Double timestamp = (double) new Date().getTime();
+            String captionStr = caption.getText().toString();
+            String url = uri.toString();
+
+            HashMap<String, Object> inpObj = new HashMap<>();
+            HashMap<String, Object> inpObjStuff = new HashMap<>();
+            inpObjStuff.put("location", location);
+            inpObjStuff.put("caption", captionStr);
+            inpObjStuff.put("url", url);
+            inpObjStuff.put("timestamp", timestamp);
+            inpObj.put(UUID.randomUUID().toString(), inpObjStuff);
+
+            this.firebaseService.DB.getReference().child(latKey).updateChildren(inpObj);
         }
     }
 }

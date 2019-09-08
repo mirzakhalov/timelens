@@ -100,6 +100,7 @@ public class MapboxView extends AppCompatActivity implements
 
 
 
+
     }
 
 
@@ -111,16 +112,19 @@ public class MapboxView extends AppCompatActivity implements
                         @Override
                         public void onSuccess(Location location) {
 
+
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                getData();
                                 lastLatitude = location.getLatitude();
                                 lastLongitude = location.getLongitude();
                                 Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
-                                if(mapboxMap != null){
+                                // Got last known location. In some rare situations this can be null.
+                                getData();
 
+                                lastLatitude = location.getLatitude();
+                                lastLongitude = location.getLongitude();
+                                Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
 
-                                }
                             }
                         }
                     });
@@ -158,16 +162,17 @@ public class MapboxView extends AppCompatActivity implements
     public void getData(){
 
         // Check if permissions are enabled and if not request
-        if(this.lastLongitude != 0.0 && this.lastLatitude != 0.0) {
-            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
-            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
+        if(lastLongitude != 0.0 && lastLatitude != 0.0) {
+            String lonTrim = firebaseService.trimNumByDecPlace(lastLongitude, 2);
+            String latTrim = firebaseService.trimNumByDecPlace(lastLatitude, 2);
             //private ArrayList imageDetailList;
 
 
             String llStr = latTrim + '_' + lonTrim;
             Log.d("Reference", llStr);
 
-            FirebaseDatabase.getInstance().getReference(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+
+            this.firebaseService.DB.getReference(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.d("STATE", "Hi");
@@ -182,12 +187,15 @@ public class MapboxView extends AppCompatActivity implements
                                 imageHM.put("url", obj.get("url").toString());
                             }
                             if (obj.get("caption") != null) {
-                                imageHM.put("caption", obj.get("url").toString());
+                                imageHM.put("caption", obj.get("caption").toString());
                             }
                             if (obj.get("location") != null) {
                                 HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
                                 imageHM.put("latitude", lcHM.get("latitude").toString());
                                 imageHM.put("longitude", lcHM.get("longitude").toString());
+                            }
+                            if (obj.get("timestamp") != null) {
+                                imageHM.put("timestamp", obj.get("timestamp").toString());
                             }
 
                             imageDetailList.add(imageHM);
@@ -195,23 +203,15 @@ public class MapboxView extends AppCompatActivity implements
                         }
 
                         Log.d("Data", imageDetailList.toString());
+
+                        for(HashMap<String, String> image: imageDetailList){
+                            mapboxMap.addMarker(new MarkerOptions()
+                                    .position(new LatLng(Double.parseDouble(image.get("latitude")), Double.parseDouble(image.get("longitude"))))
+                                    .title(image.get("No name")));
+                        }
                     }
 
-                    mapboxMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(39.9526349, -75.1928578))
-                            .title("Eiffel Tower"));
 
-                    mapboxMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(39.952700, -75.192900))
-                            .title("Eiffel Tower"));
-
-                    mapboxMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(39.952824, -75.192823))
-                            .title("Eiffel Tower"));
-
-                    mapboxMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(39.9524787, -75.1904646))
-                            .title("Eiffel Tower"));
 
                     Log.d("Data", imageDetailList.toString());
                 }

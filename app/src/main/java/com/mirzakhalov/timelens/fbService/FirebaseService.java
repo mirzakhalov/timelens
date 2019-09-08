@@ -26,7 +26,6 @@ public class FirebaseService {
 
     public FirebaseService() {
         this.DB = FirebaseDatabase.getInstance();
-        this.DB.setPersistenceEnabled(true);
     }
 
     public ArrayList<String> getImageLatLong(double lat, double lon) {

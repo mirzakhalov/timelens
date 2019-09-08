@@ -37,6 +37,8 @@ import com.google.ar.sceneform.ux.TransformableNode;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mirzakhalov.timelens.fbService.FirebaseService;
 
 import java.util.ArrayList;
@@ -62,6 +64,8 @@ public class ARView extends AppCompatActivity {
     private FirebaseService firebaseService;
 
     private ArrayList<HashMap<String, String>> imageDetailList;
+
+
 
 
 
@@ -99,6 +103,8 @@ public class ARView extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ARView.this.startActivity(new Intent(ARView.this, PhotoView.class));
+               // ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
+
             }
         });
 
@@ -116,9 +122,6 @@ public class ARView extends AppCompatActivity {
             }
         };
 
-        arFragment.getArSceneView().getScene()
-                .addOnUpdateListener(updateListener);
-
 
         // call this function every 10 seconds to get the new location
         new Timer().scheduleAtFixedRate(new TimerTask() {
@@ -129,14 +132,86 @@ public class ARView extends AppCompatActivity {
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                             100);
                 } else{
-                    Log.d("Location", "Granted");
-                   // getLocation();
+
+                   getLocation();
                 }
             }
         }, 0, 10000);//put here time 1000 milliseconds=1 second
 
 
 
+    }
+
+    public void getData(){
+
+        // Check if permissions are enabled and if not request
+        if(lastLongitude != 0.0 && lastLatitude != 0.0) {
+            String lonTrim = firebaseService.trimNumByDecPlace(lastLongitude, 2);
+            String latTrim = firebaseService.trimNumByDecPlace(lastLatitude, 2);
+            //private ArrayList imageDetailList;
+
+
+            String llStr = latTrim + '_' + lonTrim;
+            Log.d("Reference", llStr);
+
+
+            this.firebaseService.DB.getReference(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.d("STATE", "Hi");
+
+
+                    if (dataSnapshot.getValue() != null) {
+                        HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
+                        Log.d("hm", hm.toString());
+                        for (HashMap<String, Object> obj : hm.values()) {
+                            HashMap<String, String> imageHM = new HashMap<>();
+                            if (obj.get("url") != null) {
+                                imageHM.put("url", obj.get("url").toString());
+                            }
+                            if (obj.get("caption") != null) {
+                                imageHM.put("caption", obj.get("caption").toString());
+                            }
+                            if (obj.get("location") != null) {
+                                HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
+                                imageHM.put("latitude", lcHM.get("latitude").toString());
+                                imageHM.put("longitude", lcHM.get("longitude").toString());
+                            }
+                            if (obj.get("timestamp") != null) {
+                                imageHM.put("timestamp", obj.get("timestamp").toString());
+                            }
+
+                            imageDetailList.add(imageHM);
+                            Log.d("Data", "Adding data");
+                        }
+
+                        Log.d("Data", imageDetailList.toString());
+
+                        if(imageDetailList.size() > 0) {
+                            arFragment.getArSceneView().getScene()
+                                    .addOnUpdateListener(updateListener);
+                        } else{
+                            arFragment.getArSceneView().getScene()
+                                    .removeOnUpdateListener(updateListener);
+                        }
+                    }
+
+
+
+                    Log.d("Data", imageDetailList.toString());
+                }
+
+
+
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+
+        }
     }
 
 
@@ -147,12 +222,13 @@ public class ARView extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            lastLatitude = location.getLatitude();
-                            lastLongitude = location.getLongitude();
-                            Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
+
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                // do something
+                                lastLatitude = location.getLatitude();
+                                lastLongitude = location.getLongitude();
+                                Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
+                                getData();
                             }
                         }
                     });
@@ -164,61 +240,20 @@ public class ARView extends AppCompatActivity {
     }
 
     private void addObjectModel(Uri object) {
+
         Frame frame = arFragment.getArSceneView().getArFrame();
         Point center = getScreenCenter();
-
-        arFragment.getArSceneView().getScene()
-                .removeOnUpdateListener(updateListener);
+//
 
         if(frame != null) {
             List<HitResult> result = frame.hitTest(center.x, center.y);
             for(HitResult hit : result) {
                 Trackable trackable = hit.getTrackable();
                 if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
-                    //TODO call Anoop's API to get images. If empty, do nothing
-                    if(this.lastLongitude != 0 && this.lastLatitude != 0) {
-                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
-                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
-                        //private ArrayList imageDetailList;
-                        this.firebaseService.DB.getReference(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                Log.d("STATE", "Hi");
+                    placeObject(hit.createAnchor(), object);
 
-
-                                if (dataSnapshot.getValue() != null) {
-                                    imageDetailList = new ArrayList<>();
-                                    HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
-                                    for (HashMap<String, Object> obj : hm.values()) {
-                                        HashMap<String, String> imageHM = new HashMap<>();
-                                        if (obj.get("url") != null) {
-                                            imageHM.put("url", obj.get("url").toString());
-                                        }
-                                        if (obj.get("caption") != null) {
-                                            imageHM.put("caption", obj.get("url").toString());
-                                        }
-                                        if (obj.get("location") != null) {
-                                            HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
-                                            imageHM.put("latitude", lcHM.get("latitude").toString());
-                                            imageHM.put("longitude", lcHM.get("longitude").toString());
-                                        }
-
-                                        imageDetailList.add(imageHM);
-                                        Log.d("Data", "Adding data");
-
-                                    }
-                                    placeObject(hit.createAnchor(), object);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-                    }
-
-
+                    arFragment.getArSceneView().getScene()
+                            .removeOnUpdateListener(updateListener);
                 }
             }
         } else{
@@ -269,7 +304,10 @@ public class ARView extends AppCompatActivity {
 
         transformableNode.setOnTapListener((hitTestResult, motionEvent) -> {
             Toast.makeText(ARView.this, "You can't touch me", Toast.LENGTH_LONG).show();
-            ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
+            Intent intent = new Intent(ARView.this, GalleryView.class);
+            intent.putExtra("images", imageDetailList);
+            finish();
+            ARView.this.startActivity(intent);
         });
         transformableNode.select();
     }

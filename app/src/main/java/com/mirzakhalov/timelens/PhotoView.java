@@ -14,12 +14,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.location.Location;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import androidx.core.content.FileProvider;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.View;
@@ -35,7 +37,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.cloud.FirebaseVisionCloudDetectorOptions;
 import com.google.firebase.ml.vision.cloud.landmark.FirebaseVisionCloudLandmark;
@@ -51,7 +56,10 @@ import com.mirzakhalov.timelens.fbService.ImageLoc;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -81,9 +89,12 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     private double lastLatitude = 0.0;
     private double lastLongitude = 0.0;
 
+
     private double landMLatitude = 0.0;
     private double landMLongitude = 0.0;
     private boolean useLM = false;
+    String currentPhotoPath;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,11 +125,35 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
             Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
             toast.show();
         }
+        if (savedInstanceState == null)
+        {
+            try {
+                //use standard intent to capture an image
+                Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException ex) {
+                    // Error occurred while creating the File
 
-        // request permission in the runtime
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_PERMISSION);
+                }
+                // Continue only if the File was successfully created
+                if (photoFile != null) {
+                    Uri photoURI = FileProvider.getUriForFile(this,
+                            "com.example.android.fileprovider",
+                            photoFile);
+                    captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(captureIntent, CAMERA_CAPTURE);
+                }
+            } catch (ActivityNotFoundException anfe) {
+                //display an error message
+                Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
+                toast.show();
+            }
         }
+
+
+
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLocation();
@@ -129,8 +164,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     private void imageFromPath() {
         // [START image_from_path]
 
-        Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
-        FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
+        FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(thePic);
 
         // [END image_from_path]
 
@@ -163,7 +197,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                         // [START get_landmarks_cloud]
                         FirebaseVisionCloudLandmark confLM = null;
 
-                        for (FirebaseVisionCloudLandmark landmark: firebaseVisionCloudLandmarks) {
+                        for (FirebaseVisionCloudLandmark landmark : firebaseVisionCloudLandmarks) {
 
                             Rect bounds = landmark.getBoundingBox();
                             String landmarkName = landmark.getLandmark();
@@ -173,7 +207,7 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
                             Log.d("info", "onSuccess: " + landmark.toString());
 
-                            if(confidence > 0.65 && (confLM == null || (confLM.getConfidence() < confidence))) {
+                            if (confidence > 0.01 && (confLM == null || (confLM.getConfidence() < confidence))) {
                                 confLM = landmark;
                             }
 
@@ -184,26 +218,26 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
 
                         final FirebaseVisionCloudLandmark finalLM = confLM;
 
-                        if(finalLM != null) {
+                        if (finalLM != null) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(PhotoView.this);
                             builder.setMessage("You seem to be at " + confLM.getLandmark() + ". Do you want to use this location?")
                                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             // FIRE ZE MISSILES!
                                             useLM = true;
-                                            for (FirebaseVisionLatLng loc: finalLM.getLocations()) {
-                                                lastLatitude = loc.getLatitude();
-                                                lastLongitude = loc.getLongitude();
-                                                Log.d("OUTPUT", "onSuccess: lat: " + ((Double) lastLatitude).toString());
-                                                Log.d("OUTPUT", "onSuccess: long: " + ((Double) lastLongitude).toString());
+                                            for (FirebaseVisionLatLng loc : finalLM.getLocations()) {
+                                                landMLatitude = loc.getLatitude();
+                                                landMLongitude = loc.getLongitude();
+                                                Log.d("OUTPUT", "onSuccess: lat: " + ((Double) landMLatitude).toString());
+                                                Log.d("OUTPUT", "onSuccess: long: " + ((Double) landMLongitude).toString());
                                             }
-                                            uploadAvatar(thePic);
+                                            dialog.dismiss();
                                         }
                                     })
                                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             // User cancelled the dialog
-                                            uploadAvatar(thePic);
+                                            dialog.dismiss();
                                         }
                                     });
 
@@ -211,16 +245,11 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
                             dialog.show();
 
 
-                        } else {
-                            uploadAvatar(thePic);
+                            // [END get_landmarks_cloud]
+                            // [END_EXCLUDE]
                         }
-
-
-                        // [END get_landmarks_cloud]
-                        // [END_EXCLUDE]
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
+                }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         // Task failed with an exception
@@ -234,10 +263,28 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     public void onClick(View v) {
         if( v.getId() == R.id.retake){
             try {
+
                 //use standard intent to capture an image
                 Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                //we will handle the returned data in onActivityResult
-                startActivityForResult(captureIntent, CAMERA_CAPTURE);
+
+                if (captureIntent.resolveActivity(getPackageManager()) != null) {
+
+                    File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        // Error occurred while creating the File
+
+                    }
+                    // Continue only if the File was successfully created
+                    if (photoFile != null) {
+                        Uri photoURI = FileProvider.getUriForFile(this,
+                                "com.example.android.fileprovider",
+                                photoFile);
+                        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        startActivityForResult(captureIntent, CAMERA_CAPTURE);
+                    }
+                }
             } catch (ActivityNotFoundException anfe) {
                 //display an error message
                 Toast toast = Toast.makeText(PhotoView.this, "No support", Toast.LENGTH_SHORT);
@@ -247,11 +294,13 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
         else if(v.getId() == R.id.upload) {
 
             if(thePic != null){
-                uploadAvatar();
+                uploadAvatar(thePic);
             }
         }
 
     }
+
+
 
 
     @Override
@@ -261,52 +310,46 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
             //user is returning from capturing an image using the camera
             if (requestCode == CAMERA_CAPTURE) {
                 //get the Uri for the captured image
-                if(data != null) {
+                if (data != null) {
                     picUri = data.getData();
-                    Bundle extras = data.getExtras();
-                    //get the cropped bitmap
-                    thePic = extras.getParcelable("data");
-                    if(thePic != null){
-                        // resizing the picture to 256 by 256 to save space
-                        //thePic = RoundedImageView.getCroppedBitmap(thePic, 256);
-                        //uploadAvatar(thePic);
-                        image.setImageBitmap(thePic);
-                    }
-                    else{
-                        //TODO handle
-                    }
-
+                    image.setImageURI(picUri);
+                    Toast.makeText(PhotoView.this, "Data is not null", Toast.LENGTH_LONG).show();
                 }
+                if (picUri == null && currentPhotoPath != null) {
+                    picUri = Uri.fromFile(new File(currentPhotoPath));
+
+                    image.setImageURI(picUri);
+                    Toast.makeText(PhotoView.this, "Creating URI from file", Toast.LENGTH_LONG).show();
+                }
+                try {
+                    thePic = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
+                    imageFromPath();
+                } catch (Exception e){
+                    e.fillInStackTrace();
+                }
+                File file = new File(currentPhotoPath);
+                if (!file.exists()) {
+                    file.mkdir();
+                }
+
+
 
             }
 
         }
     }
 
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    @Override
+    protected void onSaveInstanceState(Bundle outState )
+    {
+        super.onSaveInstanceState(outState);
 
-        switch (requestCode) {
-            case 786: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+    }
 
-
-                }
-                else{
-
-                    //  String errorMessage = "Are you sure you don't want to choose a picture for your avatar?";
-                    Toast toast = Toast.makeText(PhotoView.this, "Permission to use camera needed", Toast.LENGTH_SHORT);
-                    toast.show();
-                    // Permission denied - Show a message to inform the user that this app only works
-                    // with these permissions granted
-
-                }
-                return;
-            }
-
-        }
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     private void getLocation() {
@@ -369,6 +412,23 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
     }
 
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+
 
     public void uploadImageMetadata(Uri uri){
         double targetLat;
@@ -402,14 +462,30 @@ public class PhotoView extends AppCompatActivity implements View.OnClickListener
         String url = uri.toString();
 
         HashMap<String, Object> inpObj = new HashMap<>();
+        HashMap<String, Object> inpObj2 = new HashMap<>();
         HashMap<String, Object> inpObjStuff = new HashMap<>();
         inpObjStuff.put("location", location);
         inpObjStuff.put("caption", captionStr);
         inpObjStuff.put("url", url);
         inpObjStuff.put("timestamp", timestamp);
-        inpObj.put(UUID.randomUUID().toString(), inpObjStuff);
+        inpObj2.put(UUID.randomUUID().toString(), inpObjStuff);
+        inpObj.put(latKey, inpObj2);
 
-        this.firebaseService.DB.getReference().child(latKey).updateChildren(inpObj);
+        this.firebaseService.DB.getReference(latKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.getValue() != null) {
+                    firebaseService.DB.getReference().child(latKey).updateChildren(inpObj2);
+                } else {
+                    firebaseService.DB.getReference(latKey).setValue(inpObj2);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }
 

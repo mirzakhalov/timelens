@@ -40,9 +40,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.google.ar:core:1.4.0'
     implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.11.0'
-    implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.squareup.picasso:picasso:2.5.1'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.3.0'
     implementation 'com.google.firebase:firebase-ml-vision:23.0.0'
+
 
 }
 

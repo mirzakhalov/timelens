@@ -415,9 +415,10 @@ public class BasicFragment extends Fragment
                              Bundle savedInstanceState) {
 
         Bundle arguments = getArguments();
-        image = arguments.getParcelable("image");
+        String image_string = arguments.getString("image");
+        image = Uri.parse(image_string);
 
-        Log.d("Image", image.toString());
+        Log.d("Image", image_string);
 
         return inflater.inflate(R.layout.basic_fragment, container, false);
     }
@@ -426,6 +427,7 @@ public class BasicFragment extends Fragment
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
+        imageView.setImageBitmap(null);
         Picasso.with(getActivity()).load(image).into(imageView);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
 

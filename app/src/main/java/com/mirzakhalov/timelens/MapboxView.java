@@ -1,11 +1,11 @@
 package com.mirzakhalov.timelens;
 
-import android.content.Intent;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
@@ -54,14 +55,14 @@ public class MapboxView extends AppCompatActivity implements
     private ImageButton cameraLaunch;
 
 
-    private HashMap<String, ArrayList<HashMap<String, String>>> imageDetailList;
+    private ArrayList<HashMap<String, String>> imageDetailList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         firebaseService = new FirebaseService();
-        imageDetailList = new HashMap<>();
+        imageDetailList = new ArrayList<>();
 
         // Mapbox access token is configured here. This needs to be called either in your application
         // object or in the same activity which contains the mapview.
@@ -99,6 +100,7 @@ public class MapboxView extends AppCompatActivity implements
 
 
 
+
     }
 
 
@@ -109,17 +111,16 @@ public class MapboxView extends AppCompatActivity implements
                     .addOnSuccessListener(new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            lastLatitude = location.getLatitude();
-                            lastLongitude = location.getLongitude();
-                            Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
-                            // Got last known location. In some rare situations this can be null.
                             if (location != null) {
+                                lastLatitude = location.getLatitude();
+                                lastLongitude = location.getLongitude();
+                                Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
+                                // Got last known location. In some rare situations this can be null.
                                 getData();
-                                if(mapboxMap != null){
 
-
-                                }
                             }
+
+
                         }
                     });
         } catch (SecurityException e) {
@@ -156,36 +157,43 @@ public class MapboxView extends AppCompatActivity implements
     public void getData(){
 
         // Check if permissions are enabled and if not request
-        if(this.lastLongitude != 0.0 && this.lastLatitude != 0.0) {
-            String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
-            String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
+        if(lastLongitude != 0.0 && lastLatitude != 0.0) {
+            String latTrim = firebaseService.trimNumByDecPlace(lastLongitude, 2);
+            String lonTrim = firebaseService.trimNumByDecPlace(lastLatitude, 2);
             //private ArrayList imageDetailList;
 
 
             String llStr = latTrim + '_' + lonTrim;
             Log.d("Reference", llStr);
 
-            this.firebaseService.DB.getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+            firebaseService.DB.getInstance().getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.d("STATE", "Hi");
 
 
                     if (dataSnapshot.getValue() != null) {
-                        ArrayList<HashMap<String, String>> ahmp = new ArrayList<>();
                         HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
                         Log.d("hm", hm.toString());
                         for (HashMap<String, Object> obj : hm.values()) {
                             HashMap<String, String> imageHM = new HashMap<>();
-                            imageHM.put("url", obj.get("url").toString());
-                            imageHM.put("caption", obj.get("caption").toString());
-                            ahmp.add(imageHM);
+                            if (obj.get("url") != null) {
+                                imageHM.put("url", obj.get("url").toString());
+                            }
+                            if (obj.get("caption") != null) {
+                                imageHM.put("caption", obj.get("url").toString());
+                            }
+                            if (obj.get("location") != null) {
+                                HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
+                                imageHM.put("latitude", lcHM.get("latitude").toString());
+                                imageHM.put("longitude", lcHM.get("longitude").toString());
+                            }
+
+                            imageDetailList.add(imageHM);
                             Log.d("Data", "Adding data");
-
                         }
-                        imageDetailList.put(llStr, ahmp);
 
-
+                        Log.d("Data", imageDetailList.toString());
                     }
 
                     mapboxMap.addMarker(new MarkerOptions()
@@ -225,7 +233,6 @@ public class MapboxView extends AppCompatActivity implements
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
 
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
-
             // Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
 

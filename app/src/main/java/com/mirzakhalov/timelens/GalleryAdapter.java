@@ -3,15 +3,14 @@ package com.mirzakhalov.timelens;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.constraint.ConstraintLayout;
-import android.support.v4.view.PagerAdapter;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.viewpager.widget.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -46,6 +45,7 @@ public class GalleryAdapter extends PagerAdapter {
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image);
         TextView caption = (TextView) itemView.findViewById(R.id.caption);
         Button capsule = (Button) itemView.findViewById(R.id.capsule);
+
 
 
         imageView.setOnTouchListener(new OnSwipeTouchListener(context) {

@@ -10,14 +10,13 @@ import android.graphics.Point;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -99,7 +98,9 @@ public class ARView extends AppCompatActivity {
         cameraLaunch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ARView.this.startActivity(new Intent(ARView.this, PhotoView.class));
+               // ARView.this.startActivity(new Intent(ARView.this, PhotoView.class));
+                ARView.this.startActivity(new Intent(ARView.this, GalleryView.class));
+
             }
         });
 
@@ -130,7 +131,7 @@ public class ARView extends AppCompatActivity {
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                             100);
                 } else{
-                    Log.d("Location", "Granted");
+
                    // getLocation();
                 }
             }
@@ -178,8 +179,8 @@ public class ARView extends AppCompatActivity {
                 if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                     //TODO call Anoop's API to get images. If empty, do nothing
                     if(this.lastLongitude != 0 && this.lastLatitude != 0) {
-                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2).toString().replace('.', '_');
-                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2).toString().replace('.', '_');
+                        String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
+                        String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
                         //private ArrayList imageDetailList;
                         this.firebaseService.DB.getReference().child(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -192,10 +193,21 @@ public class ARView extends AppCompatActivity {
                                     HashMap<String, HashMap<String, Object>> hm = (HashMap) dataSnapshot.getValue();
                                     for (HashMap<String, Object> obj : hm.values()) {
                                         HashMap<String, String> imageHM = new HashMap<>();
-                                        imageHM.put("url", obj.get("url").toString());
-                                        imageHM.put("caption", obj.get("caption").toString());
+                                        if (obj.get("url") != null) {
+                                            imageHM.put("url", obj.get("url").toString());
+                                        }
+                                        if (obj.get("caption") != null) {
+                                            imageHM.put("caption", obj.get("url").toString());
+                                        }
+                                        if (obj.get("location") != null) {
+                                            HashMap<String, Object> lcHM = (HashMap<String, Object>) obj.get("location");
+                                            imageHM.put("latitude", lcHM.get("latitude").toString());
+                                            imageHM.put("longitude", lcHM.get("longitude").toString());
+                                        }
 
                                         imageDetailList.add(imageHM);
+                                        Log.d("Data", "Adding data");
+
                                     }
                                     placeObject(hit.createAnchor(), object);
                                 }
@@ -230,7 +242,7 @@ public class ARView extends AppCompatActivity {
     private void placeObject(Anchor anchor, Uri object) {
         try {
             ModelRenderable.builder()
-                    .setSource(ARView.this, R.raw.hourglass)
+                    .setSource(ARView.this, R.raw.andy)
                     .build()
                     .thenAccept(modelRenderable -> addNodeToScene(anchor, modelRenderable, object))
                     .exceptionally(throwable -> {

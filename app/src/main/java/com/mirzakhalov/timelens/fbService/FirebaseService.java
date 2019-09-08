@@ -1,6 +1,6 @@
 package com.mirzakhalov.timelens.fbService;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.ChildEventListener;
@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class FirebaseService {
 
     public FirebaseDatabase DB;
+    public FirebaseStorage stg;
     HashMap<String, ChildEventListener> listenerMap;
     CountDownLatch done;
 
@@ -67,8 +69,8 @@ public class FirebaseService {
     }
 
     public void removeListenerLatLong(double lat, double lon) {
-        String latTrim = trimNumByDecPlace(lat, 2).toString();
-        String lonTrim = trimNumByDecPlace(lon, 2).toString();
+        String latTrim = trimNumByDecPlace(lat, 2);
+        String lonTrim = trimNumByDecPlace(lon, 2);
 
         String key = latTrim + '_' + lonTrim;
 

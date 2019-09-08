@@ -28,6 +28,7 @@
             android:layout_height="80dp"
             android:layout_margin="10dp"
             android:layout_marginLeft="20dp"
+            android:background="#00FFFFFF"
             app:srcCompat="@drawable/camera2"
             tools:srcCompat="@drawable/camera2" />
 
@@ -38,6 +39,7 @@
             android:layout_gravity="bottom|right"
             android:layout_margin="10dp"
             android:layout_marginRight="20dp"
+            android:background="#00FFFFFF"
             app:srcCompat="@drawable/switch_" />
 
     </LinearLayout>

@@ -30,9 +30,10 @@
             android:layout_height="80dp"
             android:layout_margin="10dp"
             android:layout_marginLeft="20dp"
+            android:background="#00FFFFFF"
             android:src="@drawable/camera2"
             app:src="@drawable/camera2"
-            app:srcCompat="@drawable/mapbox_compass_icon" />
+            app:srcCompat="@drawable/camera2" />
 
         <ImageButton
             android:id="@+id/switchButton"
@@ -41,9 +42,10 @@
             android:layout_gravity="bottom|right"
             android:layout_margin="10dp"
             android:layout_marginRight="20dp"
+            android:background="#00FFFFFF"
             android:src="@drawable/switch_"
             app:src="@drawable/switch_"
-            app:srcCompat="@mipmap/ic_launcher_round" />
+            app:srcCompat="@drawable/switch_" />
 
     </LinearLayout>
 

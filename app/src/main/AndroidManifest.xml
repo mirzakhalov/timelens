@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.mirzakhalov.timelens">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -28,7 +29,7 @@
         android:theme="@style/AppTheme">
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.android.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -43,6 +44,7 @@
 
         <activity android:name=".PhotoView"
             android:configChanges="orientation|screenSize" />
+
         <activity android:name=".GalleryView">
 
         </activity>

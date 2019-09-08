@@ -180,7 +180,7 @@ public class ARView extends AppCompatActivity {
                         String latTrim = this.firebaseService.trimNumByDecPlace(this.lastLongitude, 2);
                         String lonTrim = this.firebaseService.trimNumByDecPlace(this.lastLatitude, 2);
                         //private ArrayList imageDetailList;
-                        this.firebaseService.DB.getReference().child(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
+                        this.firebaseService.DB.getReference(latTrim + '_' + lonTrim).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Log.d("STATE", "Hi");

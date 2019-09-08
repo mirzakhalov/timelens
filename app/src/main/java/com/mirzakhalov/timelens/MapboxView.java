@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
@@ -109,12 +110,13 @@ public class MapboxView extends AppCompatActivity implements
                     .addOnSuccessListener(new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            lastLatitude = location.getLatitude();
-                            lastLongitude = location.getLongitude();
-                            Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
+
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 getData();
+                                lastLatitude = location.getLatitude();
+                                lastLongitude = location.getLongitude();
+                                Log.d("Location", "Longitude: " + lastLongitude + " Latitude: " + lastLatitude);
                                 if(mapboxMap != null){
 
 
@@ -165,7 +167,7 @@ public class MapboxView extends AppCompatActivity implements
             String llStr = latTrim + '_' + lonTrim;
             Log.d("Reference", llStr);
 
-            this.firebaseService.DB.getReference().child(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
+            FirebaseDatabase.getInstance().getReference(llStr).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.d("STATE", "Hi");
